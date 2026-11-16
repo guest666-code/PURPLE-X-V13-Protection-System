@@ -1,0 +1,814 @@
+html
+<!DOCTYPE html>
+<html lang="tr" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGM SHIELD | Özel Erişim & Key Sistemi</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace'],
+                    },
+                    colors: {
+                        cyber: {
+                            bg: '#09050f',
+                            card: '#130921',
+                            border: '#281542',
+                            purple: '#a855f7',
+                            pink: '#ec4899'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            background-color: #09050f;
+            color: #f3e8ff;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(168, 85, 247, 0.16) 0%, transparent 45%),
+                radial-gradient(circle at 80% 80%, rgba(236, 72, 153, 0.12) 0%, transparent 45%),
+                linear-gradient(rgba(168, 85, 247, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(168, 85, 247, 0.03) 1px, transparent 1px);
+            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+        }
+        .glass-card {
+            background: rgba(19, 9, 33, 0.78);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(168, 85, 247, 0.25);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 0 20px rgba(168, 85, 247, 0.05);
+        }
+        .neon-btn-primary {
+            background: linear-gradient(135deg, #9333ea 0%, #ec4899 100%);
+            box-shadow: 0 0 20px rgba(168, 85, 247, 0.45);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .neon-btn-primary:hover {
+            box-shadow: 0 0 30px rgba(236, 72, 153, 0.65);
+            transform: translateY(-2px);
+        }
+        .neon-btn-primary:active {
+            transform: translateY(0);
+        }
+        .neon-btn-yt {
+            background: linear-gradient(135deg, #dc2626 0%, #9333ea 100%);
+            box-shadow: 0 0 20px rgba(220, 38, 38, 0.4);
+            transition: all 0.25s ease;
+        }
+        .neon-btn-yt:hover {
+            box-shadow: 0 0 28px rgba(220, 38, 38, 0.65);
+            transform: translateY(-2px);
+        }
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #09050f;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b0764;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col font-sans antialiased selection:bg-fuchsia-600 selection:text-white">
+
+    <!-- Bildirim (Toast) Alanı -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- Üst Navbar -->
+    <header class="border-b border-cyber-border/80 bg-[#09050f]/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-600/30 to-pink-600/30 border border-purple-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(168,85,247,0.35)]">
+                    <svg class="w-5 h-5 text-fuchsia-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-lg font-extrabold tracking-wider text-white flex items-center gap-2">
+                        PURPLE X V13 <span class="text-[11px] font-mono px-2 py-0.5 rounded-md bg-fuchsia-950/80 text-fuchsia-300 border border-fuchsia-600/40">SGM SHIELD</span>
+                    </h1>
+                    <p class="text-[11px] text-purple-300/60 hidden sm:block">Tek Kullanımlık & 48 Saatlik Özel Script Kasası</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Sunucu Durumu -->
+                <div class="flex items-center gap-2 text-xs font-mono bg-cyber-card px-3 py-1.5 rounded-xl border border-cyber-border">
+                    <span id="db-status-dot" class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span>
+                    <span id="db-status-text" class="text-purple-200/70 hidden sm:inline">Bağlanıyor...</span>
+                </div>
+
+                <!-- Gizli Admin Kilit Butonu -->
+                <button onclick="openAdminAuthModal()" title="Yönetici Kasası (Sadece Purpleguy)" class="p-2.5 rounded-xl bg-cyber-card hover:bg-purple-900/40 border border-cyber-border hover:border-purple-500/50 text-purple-400/70 hover:text-purple-200 transition-all">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- ANA ZİYARETÇİ EKRANI (Kodlar Tamamen Gizli) -->
+    <main id="public-portal" class="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 py-8 sm:py-12 flex flex-col justify-center">
+        
+        <!-- Üst Başlık -->
+        <div class="text-center max-w-2xl mx-auto mb-10 space-y-3">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-purple-950/70 border border-purple-500/30 text-xs font-mono text-purple-300">
+                <span class="w-2 h-2 rounded-full bg-fuchsia-400 animate-ping"></span>
+                SİSTEM AKTİF • 2 GÜNLÜK TEK KULLANIMLIK ERİŞİM
+            </div>
+            <h2 class="text-3xl sm:text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-white via-purple-200 to-fuchsia-400 tracking-tight">
+                Özel Script Erişim Kapısı
+            </h2>
+            <p class="text-sm text-purple-200/70 leading-relaxed">
+                Korumalı koda ulaşmak için önce <strong class="text-white">Key Al</strong> adımını tamamlayın, ardından aldığınız anahtarı sağ taraftan doğrulayın. Her anahtar <strong class="text-fuchsia-300">48 saat</strong> geçerlidir ve <strong class="text-rose-400">tek kullanımda</strong> kendini imha eder.
+            </p>
+        </div>
+
+        <!-- 2 Sütunlu Ana İşlem Kartları -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-stretch">
+
+            <!-- SOL KART: 1. ADIM - YOUTUBE REKLAM KAPISI & KEY ALMA -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute -top-16 -right-16 w-40 h-40 bg-fuchsia-600/10 rounded-full blur-2xl pointer-events-none"></div>
+                
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-lg bg-purple-950/90 text-purple-300 border border-purple-500/30">
+                            Adım 01 • Anahtar Al
+                        </span>
+                        <span id="step-badge" class="text-xs font-mono text-amber-400 bg-amber-950/50 border border-amber-500/30 px-2.5 py-1 rounded-lg">
+                            Aşama: 1 / 2
+                        </span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white">Ücretsiz 48 Saatlik Key Oluştur</h3>
+                    <p id="get-key-desc" class="text-xs sm:text-sm text-purple-200/70 leading-relaxed">
+                        Anahtarınızı oluşturmak için ilk tıklamada <strong class="text-white">YouTube kanalımıza (@purpleguy-z6w)</strong> yönlendirileceksiniz. Kanalı ziyaret ettikten sonra geri dönüp ikinci kez tıklayarak anahtarınızı alabilirsiniz.
+                    </p>
+
+                    <!-- Üretilen Key Gösterim Kutusu (Başlangıçta Gizli) -->
+                    <div id="generated-key-box" class="hidden bg-[#09050f] border border-fuchsia-500/50 rounded-2xl p-4 space-y-2 shadow-[0_0_20px_rgba(236,72,153,0.15)]">
+                        <div class="flex items-center justify-between text-[11px] font-mono text-purple-300">
+                            <span>SENİN ÖZEL ANAHTARIN:</span>
+                            <span id="generated-key-timer" class="text-emerald-400 font-bold">48s 00d 00sn</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <input type="text" id="generated-key-display" readonly class="w-full bg-transparent font-mono text-sm sm:text-base font-bold text-fuchsia-300 focus:outline-none select-all">
+                            <button onclick="copyGeneratedKey()" class="px-3 py-1.5 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 border border-purple-400/40 text-xs font-semibold text-white shrink-0 transition-all">
+                                Kopyala
+                            </button>
+                        </div>
+                        <p class="text-[11px] text-purple-300/60">
+                            * Bu anahtarı sağdaki kutuya yapıştırıp kodunu açabilirsin.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="pt-6 mt-6 border-t border-cyber-border/80">
+                    <button id="btn-get-key" onclick="handleGetKeyClick()" class="w-full neon-btn-yt py-3.5 px-5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2.5">
+                        <svg id="btn-get-key-icon" class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                        </svg>
+                        <span id="btn-get-key-text">Key Al (1/2 - YouTube Desteği)</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- SAĞ KART: 2. ADIM - KEY DOĞRULAMA & KODU AÇMA -->
+            <div class="glass-card rounded-3xl p-6 sm:p-8 flex flex-col justify-between relative overflow-hidden">
+                <div class="absolute -bottom-16 -left-16 w-40 h-40 bg-purple-600/15 rounded-full blur-2xl pointer-events-none"></div>
+
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono font-bold uppercase tracking-wider px-3 py-1 rounded-lg bg-fuchsia-950/90 text-fuchsia-300 border border-fuchsia-500/30">
+                            Adım 02 • Kodu Aç
+                        </span>
+                        <span class="text-xs font-mono text-rose-400 bg-rose-950/50 border border-rose-500/30 px-2.5 py-1 rounded-lg">
+                            Tek Kullanımlık Kilit
+                        </span>
+                    </div>
+
+                    <h3 class="text-xl font-bold text-white">Korumalı Kodu Görüntüle</h3>
+                    <p class="text-xs sm:text-sm text-purple-200/70 leading-relaxed">
+                        Aldığınız anahtarı aşağıya girin. Doğrulama başarılı olduğunda kodunuz sadece size özel açılır ve <strong class="text-rose-400">anahtar anında imha edilir</strong>.
+                    </p>
+
+                    <div class="space-y-2 pt-2">
+                        <label class="block text-xs font-mono text-purple-300 uppercase">Anahtarınız (Key):</label>
+                        <input type="text" id="redeem-key-input" placeholder="Örn: PG-XXXX-XXXX-XXXX" class="w-full bg-[#09050f] border border-purple-500/40 rounded-2xl px-4 py-3.5 text-sm font-mono text-white placeholder-purple-400/30 focus:outline-none focus:border-fuchsia-400 shadow-inner">
+                    </div>
+
+                    <!-- Hata / Durum Mesaj Kutusu -->
+                    <div id="redeem-alert-box" class="hidden rounded-xl p-3 text-xs font-mono border"></div>
+                </div>
+
+                <div class="pt-6 mt-6 border-t border-cyber-border/80">
+                    <button id="btn-redeem" onclick="redeemKeyAndRevealCode()" class="w-full neon-btn-primary py-3.5 px-5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
+                        </svg>
+                        <span>Key Doğrula & Kodu Aç</span>
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- ==================== ÇÖZÜLEN GİZLİ KOD MODALI (SADECE DOĞRULAYAN KİŞİ GÖRÜR) ==================== -->
+    <div id="secret-code-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
+        <div class="glass-card max-w-2xl w-full rounded-3xl p-6 sm:p-8 border border-emerald-500/50 shadow-[0_0_50px_rgba(16,185,129,0.25)] space-y-5">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <span class="inline-flex items-center gap-1.5 text-xs font-mono font-bold text-emerald-400 bg-emerald-950/80 border border-emerald-500/40 px-3 py-1 rounded-lg mb-2">
+                        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        ERİŞİM ONAYLANDI • ANAHTAR İMHA EDİLDİ
+                    </span>
+                    <h3 class="text-xl font-bold text-white">Korumalı Roblox Scriptin Hazır!</h3>
+                </div>
+                <button onclick="closeSecretModal()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <div class="bg-rose-950/40 border border-rose-500/40 rounded-xl p-3.5 text-xs text-rose-200 leading-relaxed">
+                <strong>ÖNEMLİ UYARI:</strong> Kullandığınız anahtar tek kullanımlık olduğu için sunucudan <strong>kalıcı olarak silindi/kilitlendi</strong>. Bu pencereyi kapatmadan önce aşağıdaki kodu mutlaka kopyalayın!
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex items-center justify-between text-xs font-mono text-purple-300">
+                    <span>ÖZEL SCRIPT KODUNUZ:</span>
+                    <button onclick="copySecretPayload()" class="px-3 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold shadow-lg transition-all">
+                        Kodu Kopyala
+                    </button>
+                </div>
+                <pre id="revealed-payload-box" class="bg-[#06030a] border border-emerald-500/40 rounded-2xl p-4 font-mono text-xs sm:text-sm text-emerald-300 overflow-x-auto select-all whitespace-pre-wrap break-all"></pre>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button onclick="copySecretPayload()" class="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 font-bold text-sm text-white transition-all">
+                    Kodu Panoya Kopyala
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== GİZLİ ADMIN GİRİŞ & YÖNETİM MODALI ==================== -->
+    <div id="admin-modal" class="hidden fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4 overflow-y-auto">
+        <div class="glass-card max-w-4xl w-full rounded-3xl p-6 sm:p-8 border border-purple-500/50 space-y-6 my-8">
+            
+            <!-- Admin Üst Bar -->
+            <div class="flex items-center justify-between border-b border-cyber-border pb-4">
+                <div class="flex items-center gap-2.5">
+                    <span class="w-3 h-3 rounded-full bg-fuchsia-500"></span>
+                    <h3 class="text-lg font-bold text-white">Purpleguy Yönetici Kasası</h3>
+                </div>
+                <button onclick="closeAdminModal()" class="p-2 rounded-xl bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <!-- PIN Giriş Ekranı -->
+            <div id="admin-pin-section" class="max-w-sm mx-auto py-6 space-y-4 text-center">
+                <p class="text-xs font-mono text-purple-300">Yönetici kasasını açmak için gizli PIN kodunu girin (PIN: 1987)</p>
+                <input type="password" id="admin-pin-input" placeholder="••••" class="w-full text-center tracking-[0.5em] bg-[#09050f] border border-purple-500/50 rounded-2xl px-4 py-3 text-lg font-mono text-white focus:outline-none focus:border-fuchsia-400">
+                <button onclick="verifyAdminPin()" class="w-full neon-btn-primary py-3 rounded-xl font-bold text-sm text-white">
+                    Kasayı Aç
+                </button>
+            </div>
+
+            <!-- Admin Kontrol Paneli (Doğrulama Sonrası Açılır) -->
+            <div id="admin-dashboard-section" class="hidden space-y-6">
+                
+                <!-- Korunan Gizli Kod Güncelleme -->
+                <div class="bg-[#09050f] border border-cyber-border rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-mono font-bold text-purple-300">VERİTABANINDA SAKLANAN GİZLİ KOD (Sadece Key Doğrulayan Görür):</span>
+                        <button onclick="saveProtectedPayload()" class="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-500 text-xs font-bold text-white">
+                            Kodu Güncelle
+                        </button>
+                    </div>
+                    <textarea id="admin-payload-textarea" rows="3" class="w-full bg-cyber-card border border-purple-500/30 rounded-xl p-3 font-mono text-xs text-emerald-300 focus:outline-none"></textarea>
+                </div>
+
+                <!-- Manuel Key Üretimi ve İstatistikler -->
+                <div class="flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <div class="flex items-center gap-2 text-xs font-mono">
+                        <span id="admin-stat-active" class="px-3 py-1.5 rounded-lg bg-emerald-950 text-emerald-400 border border-emerald-700/50">Aktif: 0</span>
+                        <span id="admin-stat-used" class="px-3 py-1.5 rounded-lg bg-rose-950 text-rose-400 border border-rose-700/50">İmha/Süresi Dolmuş: 0</span>
+                    </div>
+                    <button onclick="adminCreateManualKey()" class="w-full sm:w-auto px-4 py-2 rounded-xl neon-btn-primary text-xs font-bold text-white">
+                        + Özel Key Üret (48 Saat)
+                    </button>
+                </div>
+
+                <!-- Key Listesi -->
+                <div class="overflow-x-auto max-h-[280px] overflow-y-auto border border-cyber-border rounded-2xl">
+                    <table class="w-full text-left border-collapse text-xs font-mono">
+                        <thead class="bg-[#09050f] text-purple-300 sticky top-0">
+                            <tr>
+                                <th class="py-3 px-4">Anahtar (Key)</th>
+                                <th class="py-3 px-4">Durum</th>
+                                <th class="py-3 px-4">Kalan Süre</th>
+                                <th class="py-3 px-4 text-right">İşlem</th>
+                            </tr>
+                        </thead>
+                        <tbody id="admin-keys-tbody" class="divide-y divide-cyber-border/60">
+                            <tr><td colspan="4" class="py-6 text-center text-slate-500">Yükleniyor...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Alt Bilgi -->
+    <footer class="border-t border-cyber-border/60 py-4 text-center text-[11px] text-purple-300/40 font-mono">
+        PURPLEGUY SHIELD &copy; 2026 • Tüm Kodlar Sunucu Tarafında Şifreli Korunmaktadır
+    </footer>
+
+    <!-- Firebase & Uygulama Mantığı -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, deleteDoc, onSnapshot, collection } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Ortam Yapılandırması
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'purpleguy-vault-v13';
+        const firebaseConfig = JSON.parse(__firebase_config);
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        let currentUser = null;
+        let isAdminUnlocked = false;
+        let allKeysCache = [];
+
+        const YOUTUBE_URL = "https://www.youtube.com/@purpleguy-z6w";
+        const FORTY_EIGHT_HOURS_MS = 48 * 60 * 60 * 1000; // Tam 48 Saat (2 Gün)
+        const DEFAULT_PAYLOAD = `loadstring(game:HttpGet("https://gist.githubusercontent.com/guest666-code/329b8570e765e253222014988980eae6/raw/5fccbbb36d73d734c1d817fc663f25c1ebedfcc2/PURPLE%2520X%2520V13.lua"))()`;
+
+        // Toast Bildirim Sistemi
+        window.showToast = function(msg, type = 'info') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            const styles = {
+                success: 'bg-emerald-950/95 border-emerald-500 text-emerald-200 shadow-[0_0_20px_rgba(16,185,129,0.35)]',
+                error: 'bg-rose-950/95 border-rose-500 text-rose-200 shadow-[0_0_20px_rgba(244,63,94,0.35)]',
+                info: 'bg-purple-950/95 border-fuchsia-500 text-purple-100 shadow-[0_0_20px_rgba(168,85,247,0.35)]'
+            };
+            el.className = `pointer-events-auto px-4 py-3 rounded-2xl border text-xs font-mono backdrop-blur-md transition-all duration-300 ${styles[type] || styles.info}`;
+            el.textContent = msg;
+            container.appendChild(el);
+            setTimeout(() => {
+                el.classList.add('opacity-0', 'translate-x-4');
+                setTimeout(() => el.remove(), 300);
+            }, 3500);
+        };
+
+        // Güvenli Pano Kopyalama
+        function copyToClipboard(text, successMessage) {
+            const ta = document.createElement('textarea');
+            ta.value = text;
+            ta.style.position = 'fixed';
+            ta.style.opacity = '0';
+            document.body.appendChild(ta);
+            ta.select();
+            try {
+                document.execCommand('copy');
+                showToast(successMessage, 'success');
+            } catch (e) {
+                showToast('Kopyalama başarısız oldu.', 'error');
+            }
+            document.body.removeChild(ta);
+        }
+
+        // Auth Başlatma (Kural 3: Önce Auth)
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth Hatası:", err);
+                document.getElementById('db-status-dot').className = "w-2 h-2 rounded-full bg-rose-500";
+                document.getElementById('db-status-text').textContent = "Bağlantı Hatası";
+            }
+        }
+
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                currentUser = user;
+                document.getElementById('db-status-dot').className = "w-2 h-2 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]";
+                document.getElementById('db-status-text').textContent = "Kasa Aktif";
+                
+                await ensureVaultPayloadExists();
+                listenKeysForAdmin();
+                restoreVisitorSessionUI();
+            }
+        });
+
+        // Veritabanında Gizli Kodu Başlangıçta Garantiye Al
+        async function ensureVaultPayloadExists() {
+            if (!currentUser) return;
+            const configRef = doc(db, 'artifacts', appId, 'public', 'data', 'vault_config', 'main');
+            try {
+                const snap = await getDoc(configRef);
+                if (!snap.exists()) {
+                    await setDoc(configRef, {
+                        payload: DEFAULT_PAYLOAD,
+                        updatedAt: Date.now()
+                    });
+                }
+            } catch (e) {
+                console.error("Config kontrol hatası:", e);
+            }
+        }
+
+        // ==================== 2 AŞAMALI YOUTUBE REKLAM KAPISI & KEY ALMA ====================
+        function generateUniqueKey() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+            const seg = () => Array.from({length: 4}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+            return `PURPLE-${seg()}-${seg()}-${seg()}`;
+        }
+
+        function restoreVisitorSessionUI() {
+            const ytStepDone = localStorage.getItem('pg_yt_step_done') === 'true';
+            const savedKey = localStorage.getItem('pg_generated_key');
+            const savedExpires = parseInt(localStorage.getItem('pg_generated_expires') || '0', 10);
+
+            if (savedKey && savedExpires > Date.now()) {
+                // Ziyaretçi zaten aktif bir key almış
+                showGeneratedKeyBox(savedKey, savedExpires);
+                setButtonReadyState();
+            } else if (ytStepDone) {
+                // 1. tıklamayı (YouTube) tamamlamış, 2. tıklamaya hazır
+                setButtonReadyState();
+            }
+        }
+
+        function setButtonReadyState() {
+            document.getElementById('step-badge').textContent = "Aşama: 2 / 2 (Hazır)";
+            document.getElementById('step-badge').className = "text-xs font-mono text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 px-2.5 py-1 rounded-lg";
+            document.getElementById('btn-get-key').className = "w-full neon-btn-primary py-3.5 px-5 rounded-2xl font-bold text-sm text-white flex items-center justify-center gap-2.5";
+            document.getElementById('btn-get-key-text').textContent = "Key Al (2/2 - Anahtarı Oluştur)";
+            document.getElementById('get-key-desc').innerHTML = `YouTube adımı doğrulandı! Şimdi butona tıklayarak <strong class="text-fuchsia-300">48 saatlik tek kullanımlık</strong> anahtarınızı oluşturabilirsiniz.`;
+        }
+
+        function showGeneratedKeyBox(keyStr, expiresAt) {
+            document.getElementById('generated-key-box').classList.remove('hidden');
+            document.getElementById('generated-key-display').value = keyStr;
+            document.getElementById('generated-key-box').setAttribute('data-expires', expiresAt);
+            document.getElementById('redeem-key-input').value = keyStr;
+        }
+
+        window.handleGetKeyClick = async function() {
+            if (!currentUser) {
+                showToast("Sunucu bağlantısı bekleniyor...", "error");
+                return;
+            }
+
+            const ytStepDone = localStorage.getItem('pg_yt_step_done') === 'true';
+
+            // 1. TIKLAMA: YouTube Profiline Yönlendir
+            if (!ytStepDone) {
+                localStorage.setItem('pg_yt_step_done', 'true');
+                window.open(YOUTUBE_URL, '_blank');
+                setButtonReadyState();
+                showToast("Adım 1/2 Tamamlandı: YouTube kanalı açıldı! Key oluşturmak için 'Key Al' butonuna tekrar tıkla.", "info");
+                return;
+            }
+
+            // Zaten üretilmiş ve süresi dolmamış bir key varsa tekrar spam yapılmasını önle
+            const existingKey = localStorage.getItem('pg_generated_key');
+            const existingExpires = parseInt(localStorage.getItem('pg_generated_expires') || '0', 10);
+            if (existingKey && existingExpires > Date.now()) {
+                // Veritabanında hala kullanılmamış mı kontrol et
+                const checkSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'pg_keys', existingKey));
+                if (checkSnap.exists() && !checkSnap.data().used) {
+                    showGeneratedKeyBox(existingKey, existingExpires);
+                    showToast("Zaten aktif bir anahtarınız mevcut!", "info");
+                    return;
+                }
+            }
+
+            // 2. TIKLAMA: 48 Saatlik Tek Kullanımlık Key Üret
+            const btn = document.getElementById('btn-get-key');
+            btn.disabled = true;
+            btn.classList.add('opacity-60');
+
+            try {
+                const newKey = generateUniqueKey();
+                const now = Date.now();
+                const expiresAt = now + FORTY_EIGHT_HOURS_MS;
+
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'pg_keys', newKey), {
+                    key: newKey,
+                    used: false,
+                    createdAt: now,
+                    expiresAt: expiresAt,
+                    issuedTo: currentUser.uid
+                });
+
+                localStorage.setItem('pg_generated_key', newKey);
+                localStorage.setItem('pg_generated_expires', expiresAt.toString());
+
+                showGeneratedKeyBox(newKey, expiresAt);
+                showToast("48 saatlik tek kullanımlık anahtarınız oluşturuldu!", "success");
+            } catch (err) {
+                console.error(err);
+                showToast("Anahtar oluşturulurken bir hata oluştu.", "error");
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60');
+            }
+        };
+
+        window.copyGeneratedKey = function() {
+            const val = document.getElementById('generated-key-display').value;
+            if (val) copyToClipboard(val, "Anahtar kopyalandı! Sağ taraftan doğrulayabilirsiniz.");
+        };
+
+        // ==================== KEY DOĞRULAMA, TEK KULLANIMLIK İMHA & KODU GÖSTERME ====================
+        function showRedeemAlert(msg, isError = true) {
+            const box = document.getElementById('redeem-alert-box');
+            box.classList.remove('hidden');
+            box.className = isError 
+                ? "rounded-xl p-3 text-xs font-mono border bg-rose-950/60 border-rose-500/50 text-rose-200"
+                : "rounded-xl p-3 text-xs font-mono border bg-emerald-950/60 border-emerald-500/50 text-emerald-200";
+            box.textContent = msg;
+        }
+
+        window.redeemKeyAndRevealCode = async function() {
+            if (!currentUser) {
+                showToast("Sunucu bağlantısı hazır değil.", "error");
+                return;
+            }
+
+            const inputKey = document.getElementById('redeem-key-input').value.trim().toUpperCase();
+            if (!inputKey) {
+                showRedeemAlert("Lütfen doğrulamak için anahtarınızı girin.", true);
+                return;
+            }
+
+            const btn = document.getElementById('btn-redeem');
+            btn.disabled = true;
+            btn.classList.add('opacity-60');
+            document.getElementById('redeem-alert-box').classList.add('hidden');
+
+            try {
+                const keyDocRef = doc(db, 'artifacts', appId, 'public', 'data', 'pg_keys', inputKey);
+                const keySnap = await getDoc(keyDocRef);
+
+                if (!keySnap.exists()) {
+                    showRedeemAlert("HATA: Geçersiz veya sistemde bulunmayan anahtar!", true);
+                    showToast("Geçersiz anahtar!", "error");
+                    return;
+                }
+
+                const keyData = keySnap.data();
+                const now = Date.now();
+
+                // 1. Tek Kullanımlık Kontrolü
+                if (keyData.used === true) {
+                    showRedeemAlert("ERİŞİM REDDEDİLDİ: Bu anahtar daha önce kullanılmış ve kendini imha etmiş!", true);
+                    showToast("Bu anahtar daha önce kullanılmış!", "error");
+                    return;
+                }
+
+                // 2. 48 Saat (2 Gün) Süre Kontrolü
+                if (now > keyData.expiresAt) {
+                    showRedeemAlert("SÜRE DOLDU: Bu anahtarın 48 saatlik (2 günlük) geçerlilik süresi sona ermiş!", true);
+                    showToast("Anahtarın süresi dolmuş!", "error");
+                    return;
+                }
+
+                // 3. ANAHTARI ANINDA İMHA ET (used: true)
+                await updateDoc(keyDocRef, {
+                    used: true,
+                    usedAt: now,
+                    redeemedBy: currentUser.uid
+                });
+
+                // Eğer kullanıcının localStorage'ındaki key buysa temizle
+                if (localStorage.getItem('pg_generated_key') === inputKey) {
+                    localStorage.removeItem('pg_generated_key');
+                    localStorage.removeItem('pg_generated_expires');
+                }
+
+                // 4. Gizli Kodu Veritabanından Çek ve Sadece Bu Kullanıcıya Göster
+                const configSnap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'vault_config', 'main'));
+                const secretScript = configSnap.exists() ? configSnap.data().payload : DEFAULT_PAYLOAD;
+
+                document.getElementById('revealed-payload-box').textContent = secretScript;
+                document.getElementById('secret-code-modal').classList.remove('hidden');
+                document.getElementById('redeem-key-input').value = '';
+                showRedeemAlert("Anahtar doğrulandı ve tek kullanımlık olduğu için imha edildi.", false);
+                showToast("Kod açıldı! Anahtar kalıcı olarak imha edildi.", "success");
+
+            } catch (err) {
+                console.error(err);
+                showRedeemAlert("Sistem hatası: Doğrulama tamamlanamadı.", true);
+            } finally {
+                btn.disabled = false;
+                btn.classList.remove('opacity-60');
+            }
+        };
+
+        window.copySecretPayload = function() {
+            const scriptText = document.getElementById('revealed-payload-box').textContent;
+            if (scriptText) {
+                copyToClipboard(scriptText, "Korumalı Roblox kodu panoya kopyalandı!");
+            }
+        };
+
+        window.closeSecretModal = function() {
+            document.getElementById('secret-code-modal').classList.add('hidden');
+            document.getElementById('revealed-payload-box').textContent = '';
+        };
+
+        // ==================== GİZLİ ADMIN PANELİ (SADECE PURPLEGUY) ====================
+        window.copyToClipboard = copyToClipboard;
+
+        window.openAdminAuthModal = function() {
+            document.getElementById('admin-modal').classList.remove('hidden');
+            if (isAdminUnlocked) {
+                document.getElementById('admin-pin-section').classList.add('hidden');
+                document.getElementById('admin-dashboard-section').classList.remove('hidden');
+                loadAdminPayload();
+            } else {
+                document.getElementById('admin-pin-section').classList.remove('hidden');
+                document.getElementById('admin-dashboard-section').classList.add('hidden');
+            }
+        };
+
+        window.closeAdminModal = function() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        };
+
+        window.verifyAdminPin = async function() {
+            const pin = document.getElementById('admin-pin-input').value.trim();
+            if (pin === '1987') {
+                isAdminUnlocked = true;
+                document.getElementById('admin-pin-input').value = '';
+                document.getElementById('admin-pin-section').classList.add('hidden');
+                document.getElementById('admin-dashboard-section').classList.remove('hidden');
+                await loadAdminPayload();
+                renderAdminTable();
+                showToast("Yönetici kasası açıldı.", "success");
+            } else {
+                showToast("Hatalı PIN kodu!", "error");
+            }
+        };
+
+        async function loadAdminPayload() {
+            if (!currentUser) return;
+            const snap = await getDoc(doc(db, 'artifacts', appId, 'public', 'data', 'vault_config', 'main'));
+            if (snap.exists()) {
+                document.getElementById('admin-payload-textarea').value = snap.data().payload;
+            }
+        }
+
+        window.saveProtectedPayload = async function() {
+            if (!isAdminUnlocked || !currentUser) return;
+            const newPayload = document.getElementById('admin-payload-textarea').value.trim();
+            if (!newPayload) {
+                showToast("Kod alanı boş bırakılamaz!", "error");
+                return;
+            }
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'vault_config', 'main'), {
+                    payload: newPayload,
+                    updatedAt: Date.now()
+                });
+                showToast("Korumalı script başarıyla güncellendi!", "success");
+            } catch (e) {
+                showToast("Güncelleme hatası!", "error");
+            }
+        };
+
+        window.adminCreateManualKey = async function() {
+            if (!isAdminUnlocked || !currentUser) return;
+            const newKey = generateUniqueKey();
+            const now = Date.now();
+            await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'pg_keys', newKey), {
+                key: newKey,
+                used: false,
+                createdAt: now,
+                expiresAt: now + FORTY_EIGHT_HOURS_MS,
+                issuedTo: 'ADMIN_MANUAL'
+            });
+            copyToClipboard(newKey, `Özel Key üretildi ve kopyalandı: ${newKey}`);
+        };
+
+        window.adminDeleteKey = async function(keyStr) {
+            if (!isAdminUnlocked || !currentUser) return;
+            await deleteDoc(doc(db, 'artifacts', appId, 'public', 'data', 'pg_keys', keyStr));
+            showToast("Anahtar silindi.", "info");
+        };
+
+        function listenKeysForAdmin() {
+            if (!currentUser) return;
+            const colRef = collection(db, 'artifacts', appId, 'public', 'data', 'pg_keys');
+            onSnapshot(colRef, (snapshot) => {
+                const list = [];
+                snapshot.forEach(d => list.push(d.data()));
+                list.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+                allKeysCache = list;
+                if (isAdminUnlocked) renderAdminTable();
+            }, (err) => console.error(err));
+        }
+
+        function formatTimeLeft(ms) {
+            if (ms <= 0) return "00s 00d 00sn";
+            const totalSec = Math.floor(ms / 1000);
+            const h = Math.floor(totalSec / 3600);
+            const m = Math.floor((totalSec % 3600) / 60);
+            const s = totalSec % 60;
+            return `${String(h).padStart(2, '0')}s ${String(m).padStart(2, '0')}d ${String(s).padStart(2, '0')}sn`;
+        }
+
+        function renderAdminTable() {
+            const tbody = document.getElementById('admin-keys-tbody');
+            const now = Date.now();
+            let active = 0;
+            let dead = 0;
+
+            if (allKeysCache.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="py-6 text-center text-slate-500">Kayıtlı anahtar yok.</td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = allKeysCache.map(item => {
+                const left = item.expiresAt - now;
+                const expired = left <= 0;
+                const used = item.used === true;
+
+                let statusHtml = '';
+                let timeHtml = '';
+
+                if (used) {
+                    dead++;
+                    statusHtml = `<span class="px-2 py-0.5 rounded bg-rose-950 text-rose-400 border border-rose-700/50">Kullanıldı (İmha)</span>`;
+                    timeHtml = `<span class="text-slate-600 line-through">Kilitli</span>`;
+                } else if (expired) {
+                    dead++;
+                    statusHtml = `<span class="px-2 py-0.5 rounded bg-amber-950 text-amber-400 border border-amber-700/50">Süresi Doldu</span>`;
+                    timeHtml = `<span class="text-amber-500/60">00s 00d 00sn</span>`;
+                } else {
+                    active++;
+                    statusHtml = `<span class="px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-700/50">Aktif (1 Hak)</span>`;
+                    timeHtml = `<span class="text-purple-300">${formatTimeLeft(left)}</span>`;
+                }
+
+                return `
+                    <tr class="hover:bg-purple-950/20">
+                        <td class="py-2.5 px-4 font-bold text-white">${item.key}</td>
+                        <td class="py-2.5 px-4">${statusHtml}</td>
+                        <td class="py-2.5 px-4">${timeHtml}</td>
+                        <td class="py-2.5 px-4 text-right space-x-2">
+                            <button onclick="copyToClipboard('${item.key}', 'Key kopyalandı')" class="text-purple-300 hover:underline">Kopyala</button>
+                            <button onclick="adminDeleteKey('${item.key}')" class="text-rose-400 hover:underline">Sil</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            document.getElementById('admin-stat-active').textContent = `Aktif: ${active}`;
+            document.getElementById('admin-stat-used').textContent = `İmha/Süresi Dolmuş: ${dead}`;
+        }
+
+        // Canlı Geri Sayım Güncelleyici
+        setInterval(() => {
+            const box = document.getElementById('generated-key-box');
+            if (!box.classList.contains('hidden')) {
+                const exp = parseInt(box.getAttribute('data-expires') || '0', 10);
+                const diff = exp - Date.now();
+                document.getElementById('generated-key-timer').textContent = formatTimeLeft(diff);
+            }
+            if (isAdminUnlocked) {
+                renderAdminTable();
+            }
+        }, 1000);
+
+        initAuth();
+    </script>
+</body>
+</html>
